@@ -4,34 +4,65 @@ import { useEffect, useState } from 'react';
 import Layout from '@/components/Layout';
 import apiService, { Vehicle } from '@/services/api';
 import { AxiosError } from 'axios';
+import VehicleModal from '@/components/modals/VehicleModal';
 
 export default function Vehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | undefined>();
+
+  const fetchVehicles = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getVehicles();
+      setVehicles(response.data);
+    } catch (err) {
+      console.error('Araçlar yüklenirken hata:', err);
+      if (err instanceof AxiosError) {
+        setError(`Araçlar yüklenirken hata oluştu: ${err.response?.data?.detail || err.message}`);
+      } else {
+        setError('Beklenmeyen bir hata oluştu');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchVehicles = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await apiService.getVehicles();
-        setVehicles(response.data);
-      } catch (err) {
-        console.error('Araçlar yüklenirken hata:', err);
-        if (err instanceof AxiosError) {
-          setError(`Araçlar yüklenirken hata oluştu: ${err.response?.data?.detail || err.message}`);
-        } else {
-          setError('Beklenmeyen bir hata oluştu');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchVehicles();
   }, []);
+
+  const handleSave = async (data: Partial<Vehicle>) => {
+    try {
+      if (selectedVehicle) {
+        await apiService.updateVehicle(selectedVehicle.id, data);
+      } else {
+        await apiService.createVehicle(data);
+      }
+      fetchVehicles();
+      setIsModalOpen(false);
+      setSelectedVehicle(undefined);
+    } catch (error) {
+      console.error('Araç kaydedilirken hata:', error);
+      alert('Araç kaydedilirken bir hata oluştu');
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Bu aracı silmek istediğinizden emin misiniz?')) {
+      try {
+        await apiService.deleteVehicle(id);
+        fetchVehicles();
+      } catch (error) {
+        console.error('Araç silinirken hata:', error);
+        alert('Araç silinirken bir hata oluştu');
+      }
+    }
+  };
 
   const filteredVehicles = vehicles.filter(vehicle =>
     vehicle.plaka.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -58,7 +89,13 @@ export default function Vehicles() {
             />
             <span className="absolute left-3 top-2.5">🔍</span>
           </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200">
+          <button 
+            onClick={() => {
+              setSelectedVehicle(undefined);
+              setIsModalOpen(true);
+            }}
+            className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200"
+          >
             + Yeni Araç Ekle
           </button>
         </div>
@@ -102,10 +139,19 @@ export default function Vehicles() {
               </div>
 
               <div className="flex space-x-2">
-                <button className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors duration-200">
+                <button 
+                  onClick={() => {
+                    setSelectedVehicle(vehicle);
+                    setIsModalOpen(true);
+                  }}
+                  className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors duration-200"
+                >
                   Düzenle
                 </button>
-                <button className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors duration-200">
+                <button 
+                  onClick={() => handleDelete(vehicle.id)}
+                  className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors duration-200"
+                >
                   Sil
                 </button>
               </div>
@@ -113,6 +159,16 @@ export default function Vehicles() {
           </div>
         ))}
       </div>
+
+      <VehicleModal
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedVehicle(undefined);
+        }}
+        onSave={handleSave}
+        vehicle={selectedVehicle}
+      />
     </div>
   );
 
