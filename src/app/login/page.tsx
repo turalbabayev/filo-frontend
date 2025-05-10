@@ -2,9 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app';
+
+interface LoginResponse {
+  access: string;
+  refresh: string;
+}
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -19,7 +24,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const response = await axios.post(`${API_URL}/api/token/`, {
+      const response = await axios.post<LoginResponse>(`${API_URL}/api/token/`, {
         username,
         password,
       });
@@ -35,11 +40,12 @@ export default function Login() {
       document.cookie = `refresh_token=${refresh}; path=/`;
 
       router.push('/');
-    } catch (err: any) {
-      if (err.response?.status === 401) {
+    } catch (err) {
+      if (err instanceof AxiosError && err.response?.status === 401) {
         setError('Kullanıcı adı veya şifre hatalı');
       } else {
         setError('Giriş yapılırken bir hata oluştu');
+        console.error('Login error:', err);
       }
     } finally {
       setLoading(false);
