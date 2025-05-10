@@ -6,6 +6,7 @@ import { FiTruck, FiUsers, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import apiService from '@/services/api';
+import { AxiosError } from 'axios';
 
 interface DashboardStats {
   total_vehicles: number;
@@ -44,14 +45,19 @@ export default function Home() {
         
         setStats(statsResponse.data);
         setActivities(activitiesResponse.data);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Dashboard veri yükleme hatası:', err);
-        console.error('Hata detayları:', {
-          message: err.message,
-          response: err.response?.data,
-          status: err.response?.status
-        });
-        setError('Veriler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+        
+        if (err instanceof AxiosError) {
+          console.error('Hata detayları:', {
+            message: err.message,
+            response: err.response?.data,
+            status: err.response?.status
+          });
+          setError(`Veriler yüklenirken bir hata oluştu: ${err.response?.data?.detail || err.message}`);
+        } else {
+          setError('Beklenmeyen bir hata oluştu');
+        }
       } finally {
         setLoading(false);
       }
