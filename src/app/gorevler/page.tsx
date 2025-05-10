@@ -38,15 +38,20 @@ export default function Gorevler() {
         await apiService.updateTask(selectedTask.id, data);
         toast.success('Görev başarıyla güncellendi');
       } else {
-        await apiService.createTask(data);
+        console.log('Görev oluşturma verisi:', data); // Debug için veriyi logla
+        const response = await apiService.createTask(data);
+        console.log('Görev oluşturma yanıtı:', response); // Debug için yanıtı logla
         toast.success('Görev başarıyla oluşturuldu');
       }
       fetchTasks();
       setIsModalOpen(false);
       setSelectedTask(undefined);
-    } catch (error) {
-      console.error('Görev kaydedilirken hata:', error);
-      toast.error('Görev kaydedilirken bir hata oluştu');
+    } catch (error: any) {
+      console.error('Görev kaydedilirken hata detayı:', error.response?.data || error);
+      const errorMessage = error.response?.data?.detail || 
+                         error.response?.data?.message || 
+                         'Görev kaydedilirken bir hata oluştu';
+      toast.error(errorMessage);
     }
   };
 

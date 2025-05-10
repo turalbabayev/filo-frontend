@@ -67,16 +67,30 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Seçilen araç ve sürücü bilgilerini al
+    const selectedVehicle = vehicles.find(v => v.id === formData.arac);
+    const selectedDriver = drivers.find(d => d.id === formData.surucu);
+
     // Tarihleri ISO formatına çeviriyoruz
     const submissionData = {
       ...formData,
       baslangic_tarihi: new Date(formData.baslangic_tarihi + 'T00:00:00').toISOString(),
       bitis_tarihi: new Date(formData.bitis_tarihi + 'T00:00:00').toISOString(),
-      durum: formData.durum || 'beklemede' // Eğer durum seçilmemişse beklemede olarak ayarla
+      durum: formData.durum || 'beklemede',
+      // Araç ve sürücü bilgilerini ekle
+      arac_plaka: selectedVehicle?.plaka,
+      surucu_adi: selectedDriver ? `${selectedDriver.ad} ${selectedDriver.soyad}` : undefined
     };
 
-    await onSave(submissionData);
-    onClose();
+    console.log('Gönderilen veri:', submissionData); // Debug için veriyi logla
+
+    try {
+      await onSave(submissionData);
+      onClose();
+    } catch (error: any) {
+      console.error('Form gönderim hatası:', error.response?.data || error.message);
+      throw error; // Hatayı yukarı ilet
+    }
   };
 
   if (loading) {
