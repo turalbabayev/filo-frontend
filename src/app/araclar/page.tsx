@@ -42,16 +42,17 @@ export default function Vehicles() {
     try {
       if (selectedVehicle) {
         await apiService.updateVehicle(selectedVehicle.id, data);
+        toast.success('Araç başarıyla güncellendi');
       } else {
         await apiService.createVehicle(data);
+        toast.success('Araç başarıyla kaydedildi');
       }
       fetchVehicles();
       setIsModalOpen(false);
       setSelectedVehicle(undefined);
-      toast.success('Araç başarıyla kaydedildi');
     } catch (error) {
       console.error('Araç kaydedilirken hata:', error);
-      alert('Araç kaydedilirken bir hata oluştu');
+      toast.error('Araç kaydedilirken bir hata oluştu');
     }
   };
 
@@ -66,12 +67,6 @@ export default function Vehicles() {
         toast.error('Araç silinirken bir hata oluştu');
       }
     }
-  };
-
-  const handleUpdate = () => {
-    fetchVehicles();
-    toast.success('Araç başarıyla güncellendi');
-    setIsModalOpen(false);
   };
 
   const filteredVehicles = vehicles.filter(vehicle =>
@@ -177,7 +172,6 @@ export default function Vehicles() {
           setSelectedVehicle(undefined);
         }}
         onSave={handleSave}
-        onUpdate={handleUpdate}
         vehicle={selectedVehicle}
       />
     </div>
