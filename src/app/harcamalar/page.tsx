@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Expense } from '@/services/api';
+import apiService from '@/services/api';
 import Layout from '@/components/Layout';
-import apiService, { Expense } from '@/services/api';
 import { AxiosError } from 'axios';
 
-export default function Expenses() {
+export default function ExpensesPage() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,9 +20,9 @@ export default function Expenses() {
         const response = await apiService.getExpenses();
         setExpenses(response.data);
       } catch (err) {
-        console.error('Harcamalar yüklenirken hata:', err);
+        console.error('Harcama verileri yüklenirken hata:', err);
         if (err instanceof AxiosError) {
-          setError(`Harcamalar yüklenirken hata oluştu: ${err.response?.data?.detail || err.message}`);
+          setError(err.response?.data?.detail || err.message);
         } else {
           setError('Beklenmeyen bir hata oluştu');
         }
@@ -34,97 +35,79 @@ export default function Expenses() {
   }, []);
 
   const filteredExpenses = expenses.filter(expense =>
-    expense.aciklama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    expense.kategori.toLowerCase().includes(searchTerm.toLowerCase())
+    (expense.aciklama?.toLowerCase().includes(searchTerm.toLowerCase()) || '') ||
+    expense.tip.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    expense.tutar.toString().includes(searchTerm)
   );
 
-  const getExpenseIcon = (kategori: string) => {
-    switch (kategori.toLowerCase()) {
-      case 'yakit':
-        return '⛽';
+  const getExpenseTypeColor = (tip: string) => {
+    switch (tip) {
       case 'bakim':
-        return '🔧';
-      case 'sigorta':
-        return '📄';
-      case 'vergi':
-        return '💰';
+        return 'bg-blue-100 text-blue-800';
+      case 'kasko':
+        return 'bg-purple-100 text-purple-800';
+      case 'yakıt':
+        return 'bg-green-100 text-green-800';
+      case 'lastik':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'tamir':
+        return 'bg-red-100 text-red-800';
       default:
-        return '💳';
+        return 'bg-gray-100 text-gray-800';
     }
   };
 
   const content = (
-    <div className="space-y-8">
-      {/* Başlık ve Üst Kısım */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Harcama Yönetimi</h1>
-          <p className="mt-1 text-gray-600">
-            Toplam {expenses.length} harcama kaydı bulunmaktadır
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Harcama ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
-            />
-            <span className="absolute left-3 top-2.5">🔍</span>
-          </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200">
-            + Yeni Harcama Ekle
-          </button>
-        </div>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-800">Harcamalar</h1>
+        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+          + Yeni Harcama
+        </button>
       </div>
 
-      {/* Harcama Kartları */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Harcamalarda ara..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+        <span className="absolute right-3 top-2.5 text-gray-400">🔍</span>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredExpenses.map((expense) => (
-          <div key={expense.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="px-3 py-1 rounded-full text-sm font-medium bg-purple-100 text-purple-700">
-                  {expense.kategori}
+          <div
+            key={expense.id}
+            className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow"
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div>
+                <span className={`px-3 py-1 rounded-full text-sm font-medium ${getExpenseTypeColor(expense.tip)}`}>
+                  {expense.tip}
                 </span>
-                <button className="text-gray-400 hover:text-gray-600">•••</button>
+                <p className="mt-2 text-2xl font-bold text-gray-800">
+                  {expense.tutar.toLocaleString('tr-TR')} ₺
+                </p>
               </div>
-              
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-xl text-blue-600 text-2xl">
-                  {getExpenseIcon(expense.kategori)}
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">
-                    {expense.tutar.toLocaleString('tr-TR')} ₺
-                  </h3>
-                  <p className="text-gray-600 line-clamp-1">{expense.aciklama}</p>
-                </div>
-              </div>
+              <button className="text-gray-400 hover:text-gray-600">•••</button>
+            </div>
 
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-sm text-gray-500">Tarih</p>
-                  <p className="font-medium text-gray-800">
-                    {new Date(expense.tarih).toLocaleDateString('tr-TR')}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-sm text-gray-500">Araç</p>
-                  <p className="font-medium text-gray-800">{expense.arac_plaka}</p>
-                </div>
-              </div>
+            {expense.aciklama && (
+              <p className="text-gray-600 mb-4">{expense.aciklama}</p>
+            )}
 
-              <div className="flex space-x-2">
-                <button className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors duration-200">
-                  Düzenle
-                </button>
-                <button className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors duration-200">
-                  Sil
-                </button>
-              </div>
+            <div className="flex items-center justify-between text-sm text-gray-500">
+              <span>
+                {new Date(expense.tarih).toLocaleDateString('tr-TR', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </span>
+              <span>Araç ID: {expense.arac}</span>
             </div>
           </div>
         ))}
