@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Task, Vehicle, Driver } from '@/services/api';
 import Modal from '@/components/ui/Modal';
 import apiService from '@/services/api';
+import { AxiosError } from 'axios';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -82,14 +83,18 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
       surucu_adi: selectedDriver ? `${selectedDriver.ad} ${selectedDriver.soyad}` : undefined
     };
 
-    console.log('Gönderilen veri:', submissionData); // Debug için veriyi logla
+    console.log('Gönderilen veri:', submissionData);
 
     try {
       await onSave(submissionData);
       onClose();
-    } catch (error: any) {
-      console.error('Form gönderim hatası:', error.response?.data || error.message);
-      throw error; // Hatayı yukarı ilet
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Form gönderim hatası:', error.response?.data || error.message);
+      } else {
+        console.error('Beklenmeyen hata:', error);
+      }
+      throw error;
     }
   };
 

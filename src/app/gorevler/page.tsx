@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import apiService, { Task } from '@/services/api';
 import TaskModal from '@/components/modals/TaskModal';
 import { toast } from 'react-hot-toast';
+import { AxiosError } from 'axios';
 
 export default function Gorevler() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -38,20 +39,25 @@ export default function Gorevler() {
         await apiService.updateTask(selectedTask.id, data);
         toast.success('Görev başarıyla güncellendi');
       } else {
-        console.log('Görev oluşturma verisi:', data); // Debug için veriyi logla
+        console.log('Görev oluşturma verisi:', data);
         const response = await apiService.createTask(data);
-        console.log('Görev oluşturma yanıtı:', response); // Debug için yanıtı logla
+        console.log('Görev oluşturma yanıtı:', response);
         toast.success('Görev başarıyla oluşturuldu');
       }
       fetchTasks();
       setIsModalOpen(false);
       setSelectedTask(undefined);
-    } catch (error: any) {
-      console.error('Görev kaydedilirken hata detayı:', error.response?.data || error);
-      const errorMessage = error.response?.data?.detail || 
-                         error.response?.data?.message || 
-                         'Görev kaydedilirken bir hata oluştu';
-      toast.error(errorMessage);
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        console.error('Görev kaydedilirken hata detayı:', error.response?.data || error);
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.message || 
+                           'Görev kaydedilirken bir hata oluştu';
+        toast.error(errorMessage);
+      } else {
+        console.error('Beklenmeyen hata:', error);
+        toast.error('Görev kaydedilirken bir hata oluştu');
+      }
     }
   };
 
