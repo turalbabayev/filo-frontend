@@ -16,10 +16,12 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/token/`;
+    console.log('Trying to login with URL:', apiUrl);
+    
     try {
-      console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
       const response = await axios.post<LoginResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/token/`,
+        apiUrl,
         { username, password },
         {
           headers: {
@@ -28,7 +30,7 @@ export default function LoginPage() {
         }
       );
 
-      console.log('Login response:', response.data);
+      console.log('Login successful:', response.data);
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
       setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
@@ -45,7 +47,8 @@ export default function LoginPage() {
                            error.response?.data?.message || 
                            'Kullanıcı adı veya şifre hatalı!';
         setError(`Giriş başarısız: ${errorMessage}`);
-        console.log('Error response:', error.response?.data);
+        console.log('Error response data:', error.response?.data);
+        console.log('Error response status:', error.response?.status);
       } else {
         setError('Bir hata oluştu. Lütfen tekrar deneyin.');
       }
