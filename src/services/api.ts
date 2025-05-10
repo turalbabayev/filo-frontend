@@ -33,6 +33,8 @@ export interface Task {
   durum: 'beklemede' | 'devam_ediyor' | 'tamamlandi' | 'iptal_edildi';
   baslangic_tarihi: string;
   bitis_tarihi: string;
+  arac: number;
+  surucu: number;
   created_at: string;
 }
 
