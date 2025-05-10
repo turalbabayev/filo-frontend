@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import apiService from '@/services/api';
 import { AxiosError } from 'axios';
 import Layout from '@/components/Layout';
-import { Vehicle, Driver, Task, Mileage, Expense } from '@/services/api';
+import { Vehicle, Task, Mileage, Expense } from '@/services/api';
 
 interface DashboardStats {
   total_vehicles: number;
