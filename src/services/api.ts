@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app';
 
@@ -52,12 +52,16 @@ interface Expense {
   created_at: string;
 }
 
+interface TokenRefreshResponse {
+  access: string;
+}
+
 const api = axios.create({
   baseURL: API_URL,
 });
 
 // Request interceptor - her istekte token'ı ekle
-api.interceptors.request.use((config) => {
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   const token = localStorage.getItem('access_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -67,23 +71,25 @@ api.interceptors.request.use((config) => {
 
 // Response interceptor - 401 hatası durumunda refresh token ile yeni token al
 api.interceptors.response.use(
-  (response) => response,
+  (response: AxiosResponse) => response,
   async (error) => {
-    const originalRequest = error.config;
+    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post(`${API_URL}/api/token/refresh/`, {
+        const response = await axios.post<TokenRefreshResponse>(`${API_URL}/api/token/refresh/`, {
           refresh: refreshToken,
         });
 
         const { access } = response.data;
         localStorage.setItem('access_token', access);
 
-        originalRequest.headers.Authorization = `Bearer ${access}`;
+        if (originalRequest.headers) {
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+        }
         return api(originalRequest);
       } catch (refreshError) {
         localStorage.removeItem('access_token');
