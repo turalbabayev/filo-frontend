@@ -17,24 +17,35 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log('API URL:', process.env.NEXT_PUBLIC_API_URL);
       const response = await axios.post<LoginResponse>(
-        `${process.env.NEXT_PUBLIC_API_URL}/auth/jwt/create/`,
-        { username, password }
+        `${process.env.NEXT_PUBLIC_API_URL}/auth/token/`,
+        { username, password },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        }
       );
 
+      console.log('Login response:', response.data);
       localStorage.setItem('access_token', response.data.access);
       localStorage.setItem('refresh_token', response.data.refresh);
       setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
       setError(null);
       
-      // Başarılı girişten sonra ana sayfaya yönlendirme yapılacak
       setTimeout(() => {
         window.location.href = '/';
       }, 2000);
 
     } catch (error) {
+      console.error('Login error:', error);
       if (error instanceof AxiosError) {
-        setError('Kullanıcı adı veya şifre hatalı!');
+        const errorMessage = error.response?.data?.detail || 
+                           error.response?.data?.message || 
+                           'Kullanıcı adı veya şifre hatalı!';
+        setError(`Giriş başarısız: ${errorMessage}`);
+        console.log('Error response:', error.response?.data);
       } else {
         setError('Bir hata oluştu. Lütfen tekrar deneyin.');
       }
