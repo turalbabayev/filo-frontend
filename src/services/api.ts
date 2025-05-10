@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app';
 
@@ -10,94 +10,96 @@ export interface Vehicle {
   model: string;
   yil: number;
   tip: string;
-  kaynak_tipi: string;
-  mevcut_durum: string;
-  aciklama?: string;
+  mevcut_durum: 'havuzda' | 'kullanımda';
   created_at: string;
 }
 
 export interface Driver {
   id: number;
-  ad: string;
-  soyad: string;
-  ehliyet_no: string;
+  ad_soyad: string;
   telefon: string;
+  ehliyet_no: string;
+  ehliyet_sinifi: string;
   aktif: boolean;
   created_at: string;
 }
 
 export interface Task {
   id: number;
-  arac: number;
-  surucu: number;
-  baslangic_tarihi: string;
-  bitis_tarihi?: string;
+  baslik: string;
   aciklama: string;
+  durum: 'beklemede' | 'devam_ediyor' | 'tamamlandi' | 'iptal_edildi';
+  baslangic_tarihi: string;
+  bitis_tarihi: string;
   created_at: string;
 }
 
 export interface Mileage {
   id: number;
-  arac: number;
-  tarih: string;
+  arac_plaka: string;
+  surucu_adi: string;
   kilometre: number;
+  tarih: string;
+  aciklama: string;
   created_at: string;
 }
 
 export interface Expense {
   id: number;
-  arac: number;
-  tarih: string;
-  tip: string;
+  kategori: string;
   tutar: number;
+  tarih: string;
   aciklama: string;
+  arac_plaka: string;
   created_at: string;
 }
 
-interface TokenRefreshResponse {
-  access: string;
-}
-
-const api = axios.create({
+const api: AxiosInstance = axios.create({
   baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
-// Request interceptor - her istekte token'ı ekle
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = localStorage.getItem('access_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+// Request interceptor - token ekleme
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-  return config;
-});
+);
 
-// Response interceptor - 401 hatası durumunda refresh token ile yeni token al
+// Response interceptor - token yenileme
 api.interceptors.response.use(
-  (response: AxiosResponse) => response,
+  (response) => response,
   async (error) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
 
       try {
         const refreshToken = localStorage.getItem('refresh_token');
-        const response = await axios.post<TokenRefreshResponse>(`${API_URL}/api/token/refresh/`, {
+        const response = await axios.post(`${API_URL}/auth/token/refresh/`, {
           refresh: refreshToken,
         });
 
         const { access } = response.data;
         localStorage.setItem('access_token', access);
 
-        if (originalRequest.headers) {
-          originalRequest.headers.Authorization = `Bearer ${access}`;
-        }
+        originalRequest.headers.Authorization = `Bearer ${access}`;
         return api(originalRequest);
-      } catch (refreshError) {
+      } catch (err) {
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         window.location.href = '/login';
-        return Promise.reject(refreshError);
+        return Promise.reject(err);
       }
     }
 
@@ -106,45 +108,49 @@ api.interceptors.response.use(
 );
 
 // API fonksiyonları
-export const apiService = {
-  // Dashboard istatistikleri
-  getDashboardStats: () => api.get('/api/dashboard/stats/'),
-  getRecentActivities: () => api.get('/api/dashboard/activities/'),
+const apiService = {
+  // Auth
+  login: (username: string, password: string) =>
+    api.post('/auth/token/', { username, password }),
 
-  // Araçlar
-  getVehicles: () => api.get<Vehicle[]>('/api/araclar/'),
-  getVehicle: (id: number) => api.get<Vehicle>(`/api/araclar/${id}/`),
-  createVehicle: (data: Omit<Vehicle, 'id' | 'created_at'>) => api.post<Vehicle>('/api/araclar/', data),
-  updateVehicle: (id: number, data: Partial<Omit<Vehicle, 'id' | 'created_at'>>) => api.put<Vehicle>(`/api/araclar/${id}/`, data),
-  deleteVehicle: (id: number) => api.delete(`/api/araclar/${id}/`),
+  // Dashboard
+  getDashboardStats: () => api.get('/dashboard/stats/'),
+  getRecentActivities: () => api.get('/dashboard/activities/'),
 
-  // Sürücüler
-  getDrivers: () => api.get<Driver[]>('/api/suruculer/'),
-  getDriver: (id: number) => api.get<Driver>(`/api/suruculer/${id}/`),
-  createDriver: (data: Omit<Driver, 'id' | 'created_at'>) => api.post<Driver>('/api/suruculer/', data),
-  updateDriver: (id: number, data: Partial<Omit<Driver, 'id' | 'created_at'>>) => api.put<Driver>(`/api/suruculer/${id}/`, data),
-  deleteDriver: (id: number) => api.delete(`/api/suruculer/${id}/`),
+  // Vehicles
+  getVehicles: () => api.get('/vehicles/'),
+  getVehicle: (id: number) => api.get(`/vehicles/${id}/`),
+  createVehicle: (data: Partial<Vehicle>) => api.post('/vehicles/', data),
+  updateVehicle: (id: number, data: Partial<Vehicle>) => api.put(`/vehicles/${id}/`, data),
+  deleteVehicle: (id: number) => api.delete(`/vehicles/${id}/`),
 
-  // Görevler
-  getTasks: () => api.get<Task[]>('/api/gorevler/'),
-  getTask: (id: number) => api.get<Task>(`/api/gorevler/${id}/`),
-  createTask: (data: Omit<Task, 'id' | 'created_at'>) => api.post<Task>('/api/gorevler/', data),
-  updateTask: (id: number, data: Partial<Omit<Task, 'id' | 'created_at'>>) => api.put<Task>(`/api/gorevler/${id}/`, data),
-  deleteTask: (id: number) => api.delete(`/api/gorevler/${id}/`),
+  // Drivers
+  getDrivers: () => api.get('/drivers/'),
+  getDriver: (id: number) => api.get(`/drivers/${id}/`),
+  createDriver: (data: Partial<Driver>) => api.post('/drivers/', data),
+  updateDriver: (id: number, data: Partial<Driver>) => api.put(`/drivers/${id}/`, data),
+  deleteDriver: (id: number) => api.delete(`/drivers/${id}/`),
 
-  // Kilometre kayıtları
-  getMileages: () => api.get<Mileage[]>('/api/kilometreler/'),
-  getMileage: (id: number) => api.get<Mileage>(`/api/kilometreler/${id}/`),
-  createMileage: (data: Omit<Mileage, 'id' | 'created_at'>) => api.post<Mileage>('/api/kilometreler/', data),
-  updateMileage: (id: number, data: Partial<Omit<Mileage, 'id' | 'created_at'>>) => api.put<Mileage>(`/api/kilometreler/${id}/`, data),
-  deleteMileage: (id: number) => api.delete(`/api/kilometreler/${id}/`),
+  // Tasks
+  getTasks: () => api.get('/tasks/'),
+  getTask: (id: number) => api.get(`/tasks/${id}/`),
+  createTask: (data: Partial<Task>) => api.post('/tasks/', data),
+  updateTask: (id: number, data: Partial<Task>) => api.put(`/tasks/${id}/`, data),
+  deleteTask: (id: number) => api.delete(`/tasks/${id}/`),
 
-  // Harcamalar
-  getExpenses: () => api.get<Expense[]>('/api/harcamalar/'),
-  getExpense: (id: number) => api.get<Expense>(`/api/harcamalar/${id}/`),
-  createExpense: (data: Omit<Expense, 'id' | 'created_at'>) => api.post<Expense>('/api/harcamalar/', data),
-  updateExpense: (id: number, data: Partial<Omit<Expense, 'id' | 'created_at'>>) => api.put<Expense>(`/api/harcamalar/${id}/`, data),
-  deleteExpense: (id: number) => api.delete(`/api/harcamalar/${id}/`),
+  // Mileages
+  getMileages: () => api.get('/mileages/'),
+  getMileage: (id: number) => api.get(`/mileages/${id}/`),
+  createMileage: (data: Partial<Mileage>) => api.post('/mileages/', data),
+  updateMileage: (id: number, data: Partial<Mileage>) => api.put(`/mileages/${id}/`, data),
+  deleteMileage: (id: number) => api.delete(`/mileages/${id}/`),
+
+  // Expenses
+  getExpenses: () => api.get('/expenses/'),
+  getExpense: (id: number) => api.get(`/expenses/${id}/`),
+  createExpense: (data: Partial<Expense>) => api.post('/expenses/', data),
+  updateExpense: (id: number, data: Partial<Expense>) => api.put(`/expenses/${id}/`, data),
+  deleteExpense: (id: number) => api.delete(`/expenses/${id}/`),
 };
 
 export default apiService; 
