@@ -8,6 +8,8 @@ interface LoginResponse {
   refresh: string;
 }
 
+const API_URL = 'https://web-production-dd05.up.railway.app';
+
 export default function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -21,7 +23,7 @@ export default function LoginPage() {
     setError(null);
     setSuccess(null);
 
-    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/token/`;
+    const apiUrl = `${API_URL}/api/token/`;
     console.log('Login attempt with:', { apiUrl, username });
     
     try {
