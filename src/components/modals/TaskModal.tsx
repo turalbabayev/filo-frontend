@@ -49,9 +49,15 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
   useEffect(() => {
     if (task) {
       setFormData({
-        ...task,
-        baslangic_tarihi: task.baslangic_tarihi.split('T')[0],
-        bitis_tarihi: task.bitis_tarihi.split('T')[0]
+        baslik: task.baslik || '',
+        aciklama: task.aciklama || '',
+        durum: task.durum || 'beklemede',
+        baslangic_tarihi: task.baslangic_tarihi?.split('T')[0] || new Date().toISOString().split('T')[0],
+        bitis_tarihi: task.bitis_tarihi?.split('T')[0] || new Date().toISOString().split('T')[0],
+        arac: task.arac,
+        surucu: task.surucu,
+        arac_plaka: task.arac_plaka,
+        surucu_adi: task.surucu_adi
       });
     } else {
       setFormData({
@@ -85,9 +91,9 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
       baslangic_tarihi: formData.baslangic_tarihi,
       bitis_tarihi: formData.bitis_tarihi,
       durum: formData.durum || 'beklemede',
-      // Araç ve sürücü bilgilerini ekle
-      arac_plaka: selectedVehicle?.plaka,
-      surucu_adi: selectedDriver ? `${selectedDriver.ad} ${selectedDriver.soyad}` : undefined
+      // ID'leri gönderiyoruz, plaka ve ad bilgilerini backend oluşturacak
+      arac: formData.arac,
+      surucu: formData.surucu
     };
 
     console.log('Gönderilen veri:', submissionData);

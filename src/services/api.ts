@@ -131,11 +131,25 @@ const apiService = {
   },
 
   // Tasks
-  getTasks: () => api.get('/api/tasks/'),
-  getTask: (id: number) => api.get(`/api/tasks/${id}/`),
-  createTask: (data: Partial<Task>) => api.post('/api/tasks/', data),
-  updateTask: (id: number, data: Partial<Task>) => api.put(`/api/tasks/${id}/`, data),
-  deleteTask: (id: number) => api.delete(`/api/tasks/${id}/`),
+  getTasks: async () => {
+    const response = await api.get('/api/tasks/');
+    return response;
+  },
+  getTask: async (id: number) => {
+    const response = await api.get(`/api/tasks/${id}/`);
+    return response;
+  },
+  createTask: async (data: Partial<Task>) => {
+    const response = await api.post('/api/tasks/', data);
+    return response;
+  },
+  updateTask: async (id: number, data: Partial<Task>) => {
+    const response = await api.put(`/api/tasks/${id}/`, data);
+    return response;
+  },
+  deleteTask: async (id: number) => {
+    await api.delete(`/api/tasks/${id}/`);
+  },
 
   // Mileages
   getMileages: () => api.get('/api/mileages/'),
