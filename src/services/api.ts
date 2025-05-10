@@ -2,6 +2,56 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app';
 
+// Interfaces
+interface Vehicle {
+  id: number;
+  plaka: string;
+  marka: string;
+  model: string;
+  yil: number;
+  mevcut_durum: string;
+  aciklama?: string;
+  created_at: string;
+}
+
+interface Driver {
+  id: number;
+  ad: string;
+  soyad: string;
+  ehliyet_no: string;
+  telefon: string;
+  aktif: boolean;
+  created_at: string;
+}
+
+interface Task {
+  id: number;
+  arac: number;
+  surucu: number;
+  baslangic_tarihi: string;
+  bitis_tarihi?: string;
+  aciklama: string;
+  created_at: string;
+}
+
+interface Mileage {
+  id: number;
+  arac: number;
+  tarih: string;
+  kilometre: number;
+  created_at: string;
+}
+
+interface Expense {
+  id: number;
+  arac: number;
+  tarih: string;
+  tur: string;
+  miktar: number;
+  aciklama: string;
+  created_at: string;
+}
+
 const api = axios.create({
   baseURL: API_URL,
 });
@@ -54,38 +104,38 @@ export const apiService = {
   getRecentActivities: () => api.get('/api/dashboard/activities/'),
 
   // Araçlar
-  getVehicles: () => api.get('/api/araclar/'),
-  getVehicle: (id: number) => api.get(`/api/araclar/${id}/`),
-  createVehicle: (data: any) => api.post('/api/araclar/', data),
-  updateVehicle: (id: number, data: any) => api.put(`/api/araclar/${id}/`, data),
+  getVehicles: () => api.get<Vehicle[]>('/api/araclar/'),
+  getVehicle: (id: number) => api.get<Vehicle>(`/api/araclar/${id}/`),
+  createVehicle: (data: Omit<Vehicle, 'id' | 'created_at'>) => api.post<Vehicle>('/api/araclar/', data),
+  updateVehicle: (id: number, data: Partial<Omit<Vehicle, 'id' | 'created_at'>>) => api.put<Vehicle>(`/api/araclar/${id}/`, data),
   deleteVehicle: (id: number) => api.delete(`/api/araclar/${id}/`),
 
   // Sürücüler
-  getDrivers: () => api.get('/api/suruculer/'),
-  getDriver: (id: number) => api.get(`/api/suruculer/${id}/`),
-  createDriver: (data: any) => api.post('/api/suruculer/', data),
-  updateDriver: (id: number, data: any) => api.put(`/api/suruculer/${id}/`, data),
+  getDrivers: () => api.get<Driver[]>('/api/suruculer/'),
+  getDriver: (id: number) => api.get<Driver>(`/api/suruculer/${id}/`),
+  createDriver: (data: Omit<Driver, 'id' | 'created_at'>) => api.post<Driver>('/api/suruculer/', data),
+  updateDriver: (id: number, data: Partial<Omit<Driver, 'id' | 'created_at'>>) => api.put<Driver>(`/api/suruculer/${id}/`, data),
   deleteDriver: (id: number) => api.delete(`/api/suruculer/${id}/`),
 
   // Görevler
-  getTasks: () => api.get('/api/gorevler/'),
-  getTask: (id: number) => api.get(`/api/gorevler/${id}/`),
-  createTask: (data: any) => api.post('/api/gorevler/', data),
-  updateTask: (id: number, data: any) => api.put(`/api/gorevler/${id}/`, data),
+  getTasks: () => api.get<Task[]>('/api/gorevler/'),
+  getTask: (id: number) => api.get<Task>(`/api/gorevler/${id}/`),
+  createTask: (data: Omit<Task, 'id' | 'created_at'>) => api.post<Task>('/api/gorevler/', data),
+  updateTask: (id: number, data: Partial<Omit<Task, 'id' | 'created_at'>>) => api.put<Task>(`/api/gorevler/${id}/`, data),
   deleteTask: (id: number) => api.delete(`/api/gorevler/${id}/`),
 
   // Kilometre kayıtları
-  getMileages: () => api.get('/api/kilometreler/'),
-  getMileage: (id: number) => api.get(`/api/kilometreler/${id}/`),
-  createMileage: (data: any) => api.post('/api/kilometreler/', data),
-  updateMileage: (id: number, data: any) => api.put(`/api/kilometreler/${id}/`, data),
+  getMileages: () => api.get<Mileage[]>('/api/kilometreler/'),
+  getMileage: (id: number) => api.get<Mileage>(`/api/kilometreler/${id}/`),
+  createMileage: (data: Omit<Mileage, 'id' | 'created_at'>) => api.post<Mileage>('/api/kilometreler/', data),
+  updateMileage: (id: number, data: Partial<Omit<Mileage, 'id' | 'created_at'>>) => api.put<Mileage>(`/api/kilometreler/${id}/`, data),
   deleteMileage: (id: number) => api.delete(`/api/kilometreler/${id}/`),
 
   // Harcamalar
-  getExpenses: () => api.get('/api/harcamalar/'),
-  getExpense: (id: number) => api.get(`/api/harcamalar/${id}/`),
-  createExpense: (data: any) => api.post('/api/harcamalar/', data),
-  updateExpense: (id: number, data: any) => api.put(`/api/harcamalar/${id}/`, data),
+  getExpenses: () => api.get<Expense[]>('/api/harcamalar/'),
+  getExpense: (id: number) => api.get<Expense>(`/api/harcamalar/${id}/`),
+  createExpense: (data: Omit<Expense, 'id' | 'created_at'>) => api.post<Expense>('/api/harcamalar/', data),
+  updateExpense: (id: number, data: Partial<Omit<Expense, 'id' | 'created_at'>>) => api.put<Expense>(`/api/harcamalar/${id}/`, data),
   deleteExpense: (id: number) => api.delete(`/api/harcamalar/${id}/`),
 };
 
