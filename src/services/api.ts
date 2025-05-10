@@ -42,6 +42,7 @@ export interface Task {
 
 export interface Mileage {
   id: number;
+  arac: number;
   arac_plaka: string;
   surucu_adi: string;
   kilometre: number;

@@ -5,9 +5,10 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  title?: string;
 }
 
-export default function Modal({ isOpen, onClose, children }: ModalProps) {
+export default function Modal({ isOpen, onClose, children, title }: ModalProps) {
   return (
     <Transition.Root show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-10" onClose={onClose}>
@@ -35,7 +36,14 @@ export default function Modal({ isOpen, onClose, children }: ModalProps) {
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                {children}
+                {title && (
+                  <div className="bg-white px-4 py-5 sm:px-6">
+                    <h3 className="text-lg font-medium leading-6 text-gray-900">{title}</h3>
+                  </div>
+                )}
+                <div className="bg-white px-4 py-5 sm:p-6">
+                  {children}
+                </div>
               </Dialog.Panel>
             </Transition.Child>
           </div>
