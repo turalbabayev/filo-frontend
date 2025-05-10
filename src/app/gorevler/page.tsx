@@ -18,6 +18,7 @@ export default function Gorevler() {
     try {
       setLoading(true);
       const response = await apiService.getTasks();
+      console.log('Görevler API yanıtı:', response.data);
       setTasks(response.data);
       setError(null);
     } catch (error) {
@@ -35,13 +36,14 @@ export default function Gorevler() {
 
   const handleSave = async (data: Partial<Task>) => {
     try {
+      console.log('Gönderilen görev verisi:', data);
       if (selectedTask) {
-        await apiService.updateTask(selectedTask.id, data);
+        const response = await apiService.updateTask(selectedTask.id, data);
+        console.log('Güncelleme yanıtı:', response.data);
         toast.success('Görev başarıyla güncellendi');
       } else {
-        console.log('Görev oluşturma verisi:', data);
         const response = await apiService.createTask(data);
-        console.log('Görev oluşturma yanıtı:', response);
+        console.log('Oluşturma yanıtı:', response.data);
         toast.success('Görev başarıyla oluşturuldu');
       }
       fetchTasks();

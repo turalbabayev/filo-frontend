@@ -48,24 +48,25 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
 
   useEffect(() => {
     if (task) {
+      console.log('Düzenlenen görev:', task);
       setFormData({
-        baslik: task.baslik || '',
-        aciklama: task.aciklama || '',
-        durum: task.durum || 'beklemede',
-        baslangic_tarihi: task.baslangic_tarihi?.split('T')[0] || new Date().toISOString().split('T')[0],
-        bitis_tarihi: task.bitis_tarihi?.split('T')[0] || new Date().toISOString().split('T')[0],
+        baslik: task.baslik,
+        aciklama: task.aciklama,
+        durum: task.durum,
+        baslangic_tarihi: task.baslangic_tarihi.split('T')[0],
+        bitis_tarihi: task.bitis_tarihi.split('T')[0],
         arac: task.arac,
-        surucu: task.surucu,
-        arac_plaka: task.arac_plaka,
-        surucu_adi: task.surucu_adi
+        surucu: task.surucu
       });
     } else {
+      // Yeni görev için varsayılan değerler
+      const today = new Date().toISOString().split('T')[0];
       setFormData({
         baslik: '',
         aciklama: '',
         durum: 'beklemede',
-        baslangic_tarihi: new Date().toISOString().split('T')[0],
-        bitis_tarihi: new Date().toISOString().split('T')[0],
+        baslangic_tarihi: today,
+        bitis_tarihi: today,
         arac: undefined,
         surucu: undefined
       });
@@ -74,25 +75,46 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Form verilerini kontrol et
+    if (!formData.baslik?.trim()) {
+      toast.error('Başlık gereklidir');
+      return;
+    }
 
-    // Tarihleri kontrol edip doğru formata çeviriyoruz
+    if (!formData.arac) {
+      toast.error('Araç seçimi gereklidir');
+      return;
+    }
+
+    if (!formData.surucu) {
+      toast.error('Sürücü seçimi gereklidir');
+      return;
+    }
+
     if (!formData.baslangic_tarihi || !formData.bitis_tarihi) {
       toast.error('Başlangıç ve bitiş tarihleri gereklidir');
       return;
     }
 
+    // Bitiş tarihi başlangıç tarihinden önce olamaz
+    if (formData.bitis_tarihi < formData.baslangic_tarihi) {
+      toast.error('Bitiş tarihi başlangıç tarihinden önce olamaz');
+      return;
+    }
+
     const submissionData = {
       ...formData,
-      // Tarihleri YYYY-MM-DD formatında gönderiyoruz
+      baslik: formData.baslik.trim(),
+      aciklama: formData.aciklama?.trim() || '',
+      durum: formData.durum || 'beklemede',
       baslangic_tarihi: formData.baslangic_tarihi,
       bitis_tarihi: formData.bitis_tarihi,
-      durum: formData.durum || 'beklemede',
-      // ID'leri gönderiyoruz
       arac: formData.arac,
       surucu: formData.surucu
     };
 
-    console.log('Gönderilen veri:', submissionData);
+    console.log('Gönderilecek form verisi:', submissionData);
 
     try {
       await onSave(submissionData);
@@ -101,7 +123,6 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
       if (error instanceof AxiosError) {
         const errorData = error.response?.data;
         if (typeof errorData === 'object' && errorData !== null) {
-          // Hata mesajlarını birleştirip göster
           const errorMessages = Object.entries(errorData)
             .map(([field, messages]) => `${field}: ${messages}`)
             .join('\n');
@@ -114,7 +135,6 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
         console.error('Beklenmeyen hata:', error);
         toast.error('Beklenmeyen bir hata oluştu');
       }
-      throw error;
     }
   };
 
