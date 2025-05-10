@@ -74,10 +74,6 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Seçilen araç ve sürücü bilgilerini al
-    const selectedVehicle = vehicles.find(v => v.id === formData.arac);
-    const selectedDriver = drivers.find(d => d.id === formData.surucu);
 
     // Tarihleri kontrol edip doğru formata çeviriyoruz
     if (!formData.baslangic_tarihi || !formData.bitis_tarihi) {
@@ -91,7 +87,7 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
       baslangic_tarihi: formData.baslangic_tarihi,
       bitis_tarihi: formData.bitis_tarihi,
       durum: formData.durum || 'beklemede',
-      // ID'leri gönderiyoruz, plaka ve ad bilgilerini backend oluşturacak
+      // ID'leri gönderiyoruz
       arac: formData.arac,
       surucu: formData.surucu
     };
