@@ -66,7 +66,16 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onSave(formData);
+    
+    // Tarihleri ISO formatına çeviriyoruz
+    const submissionData = {
+      ...formData,
+      baslangic_tarihi: new Date(formData.baslangic_tarihi + 'T00:00:00').toISOString(),
+      bitis_tarihi: new Date(formData.bitis_tarihi + 'T00:00:00').toISOString(),
+      durum: formData.durum || 'beklemede' // Eğer durum seçilmemişse beklemede olarak ayarla
+    };
+
+    await onSave(submissionData);
     onClose();
   };
 

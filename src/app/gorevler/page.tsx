@@ -109,6 +109,8 @@ export default function Gorevler() {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlık</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Araç</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Sürücü</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Başlangıç</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bitiş</th>
@@ -119,17 +121,21 @@ export default function Gorevler() {
                   {tasks.map((task) => (
                     <tr key={task.id}>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.baslik}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.arac_plaka}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{task.surucu_adi}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm">
                         <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                           task.durum === 'beklemede' ? 'bg-yellow-100 text-yellow-800' :
                           task.durum === 'devam_ediyor' ? 'bg-blue-100 text-blue-800' :
                           task.durum === 'tamamlandi' ? 'bg-green-100 text-green-800' :
-                          'bg-red-100 text-red-800'
+                          task.durum === 'iptal_edildi' ? 'bg-red-100 text-red-800' :
+                          'bg-gray-100 text-gray-800'
                         }`}>
                           {task.durum === 'beklemede' ? 'Beklemede' :
                            task.durum === 'devam_ediyor' ? 'Devam Ediyor' :
                            task.durum === 'tamamlandi' ? 'Tamamlandı' :
-                           'İptal Edildi'}
+                           task.durum === 'iptal_edildi' ? 'İptal Edildi' :
+                           task.durum}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">

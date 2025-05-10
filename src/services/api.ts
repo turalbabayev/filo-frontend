@@ -35,6 +35,8 @@ export interface Task {
   bitis_tarihi: string;
   arac: number;
   surucu: number;
+  arac_plaka: string;
+  surucu_adi: string;
   created_at: string;
 }
 
