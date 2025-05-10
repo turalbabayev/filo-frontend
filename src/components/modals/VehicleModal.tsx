@@ -6,11 +6,12 @@ import { Vehicle } from '@/services/api';
 interface VehicleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Partial<Vehicle>) => void;
+  onSave: (data: Partial<Vehicle>) => Promise<void>;
+  onUpdate: () => void;
   vehicle?: Vehicle;
 }
 
-export default function VehicleModal({ isOpen, onClose, onSave, vehicle }: VehicleModalProps) {
+export default function VehicleModal({ isOpen, onClose, onSave, onUpdate, vehicle }: VehicleModalProps) {
   const [formData, setFormData] = useState<Partial<Vehicle>>({
     plaka: '',
     marka: '',

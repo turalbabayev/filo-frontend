@@ -1,119 +1,65 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Layout from '@/components/Layout';
+import { useState, useEffect } from 'react';
 import apiService, { Driver } from '@/services/api';
-import { AxiosError } from 'axios';
+import DriverModal from '@/components/modals/DriverModal';
+import { toast } from 'react-hot-toast';
+import Layout from '@/components/Layout';
 
-export default function Drivers() {
+export default function Suruculer() {
   const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDriver, setSelectedDriver] = useState<Driver | undefined>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+
+  const fetchDrivers = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getDrivers();
+      setDrivers(data);
+      setError(null);
+    } catch (error) {
+      console.error('Error fetching drivers:', error);
+      setError('Beklenmeyen bir hata oluştu');
+      toast.error('Sürücüler yüklenirken bir hata oluştu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchDrivers = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const response = await apiService.getDrivers();
-        setDrivers(response.data);
-      } catch (err) {
-        console.error('Sürücüler yüklenirken hata:', err);
-        if (err instanceof AxiosError) {
-          setError(`Sürücüler yüklenirken hata oluştu: ${err.response?.data?.detail || err.message}`);
-        } else {
-          setError('Beklenmeyen bir hata oluştu');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchDrivers();
   }, []);
 
-  const filteredDrivers = drivers.filter(driver =>
-    driver.ad_soyad.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    driver.ehliyet_no.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleDelete = async (id: number) => {
+    if (window.confirm('Bu sürücüyü silmek istediğinizden emin misiniz?')) {
+      try {
+        await apiService.deleteDriver(id);
+        setDrivers(drivers.filter(driver => driver.id !== id));
+        toast.success('Sürücü başarıyla silindi');
+      } catch (error) {
+        console.error('Error deleting driver:', error);
+        toast.error('Sürücü silinirken bir hata oluştu');
+      }
+    }
+  };
 
-  const content = (
-    <div className="space-y-8">
-      {/* Başlık ve Üst Kısım */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Sürücü Yönetimi</h1>
-          <p className="mt-1 text-gray-600">Toplam {drivers.length} sürücü bulunmaktadır</p>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Sürücü ara..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64"
-            />
-            <span className="absolute left-3 top-2.5">🔍</span>
-          </div>
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-200">
-            + Yeni Sürücü Ekle
-          </button>
-        </div>
-      </div>
-
-      {/* Sürücü Kartları */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDrivers.map((driver) => (
-          <div key={driver.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                  driver.aktif
-                    ? 'bg-green-100 text-green-700'
-                    : 'bg-red-100 text-red-700'
-                }`}>
-                  {driver.aktif ? 'Aktif' : 'Pasif'}
-                </span>
-                <button className="text-gray-400 hover:text-gray-600">•••</button>
-              </div>
-              
-              <div className="flex items-center space-x-4 mb-4">
-                <div className="w-12 h-12 flex items-center justify-center bg-blue-100 rounded-xl text-blue-600 text-2xl">
-                  👤
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{driver.ad_soyad}</h3>
-                  <p className="text-gray-600">Ehliyet No: {driver.ehliyet_no}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-sm text-gray-500">Telefon</p>
-                  <p className="font-medium text-gray-800">{driver.telefon}</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-sm text-gray-500">Ehliyet Sınıfı</p>
-                  <p className="font-medium text-gray-800">{driver.ehliyet_sinifi}</p>
-                </div>
-              </div>
-
-              <div className="flex space-x-2">
-                <button className="flex-1 px-4 py-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors duration-200">
-                  Düzenle
-                </button>
-                <button className="flex-1 px-4 py-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors duration-200">
-                  Sil
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+  const handleSave = async (data: Partial<Driver>) => {
+    try {
+      if (selectedDriver) {
+        await apiService.updateDriver(selectedDriver.id, data);
+      } else {
+        await apiService.createDriver(data);
+      }
+      fetchDrivers();
+      setIsModalOpen(false);
+      toast.success(selectedDriver ? 'Sürücü başarıyla güncellendi' : 'Sürücü başarıyla kaydedildi');
+    } catch (error) {
+      console.error('Sürücü kaydedilirken hata:', error);
+      toast.error('Sürücü kaydedilirken bir hata oluştu');
+    }
+  };
 
   if (loading) {
     return (
@@ -138,5 +84,86 @@ export default function Drivers() {
     );
   }
 
-  return <Layout>{content}</Layout>;
+  return (
+    <Layout>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">Sürücüler</h1>
+          <button
+            onClick={() => {
+              setSelectedDriver(undefined);
+              setIsModalOpen(true);
+            }}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          >
+            Yeni Sürücü Ekle
+          </button>
+        </div>
+
+        {drivers.length > 0 ? (
+          <div className="bg-white shadow rounded-lg overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ad</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Soyad</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Telefon</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ehliyet No</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Durum</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">İşlemler</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {drivers.map((driver) => (
+                    <tr key={driver.id}>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.ad}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.soyad}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.telefon}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{driver.ehliyet_no}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${driver.aktif ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                          {driver.aktif ? 'Aktif' : 'Pasif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => {
+                            setSelectedDriver(driver);
+                            setIsModalOpen(true);
+                          }}
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
+                          Düzenle
+                        </button>
+                        <button
+                          onClick={() => handleDelete(driver.id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Sil
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white shadow rounded-lg p-8 text-center">
+            <p className="text-gray-500 text-lg">Henüz hiç sürücü eklenmemiş</p>
+          </div>
+        )}
+
+        {isModalOpen && (
+          <DriverModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSave}
+            driver={selectedDriver}
+          />
+        )}
+      </div>
+    </Layout>
+  );
 } 

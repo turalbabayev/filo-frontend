@@ -5,6 +5,7 @@ import Layout from '@/components/Layout';
 import apiService, { Vehicle } from '@/services/api';
 import { AxiosError } from 'axios';
 import VehicleModal from '@/components/modals/VehicleModal';
+import { toast } from 'react-hot-toast';
 
 export default function Vehicles() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -27,6 +28,7 @@ export default function Vehicles() {
       } else {
         setError('Beklenmeyen bir hata oluştu');
       }
+      toast.error('Araçlar yüklenirken bir hata oluştu');
     } finally {
       setLoading(false);
     }
@@ -46,6 +48,7 @@ export default function Vehicles() {
       fetchVehicles();
       setIsModalOpen(false);
       setSelectedVehicle(undefined);
+      toast.success('Araç başarıyla kaydedildi');
     } catch (error) {
       console.error('Araç kaydedilirken hata:', error);
       alert('Araç kaydedilirken bir hata oluştu');
@@ -56,12 +59,19 @@ export default function Vehicles() {
     if (window.confirm('Bu aracı silmek istediğinizden emin misiniz?')) {
       try {
         await apiService.deleteVehicle(id);
-        fetchVehicles();
+        setVehicles(vehicles.filter(vehicle => vehicle.id !== id));
+        toast.success('Araç başarıyla silindi');
       } catch (error) {
         console.error('Araç silinirken hata:', error);
-        alert('Araç silinirken bir hata oluştu');
+        toast.error('Araç silinirken bir hata oluştu');
       }
     }
+  };
+
+  const handleUpdate = () => {
+    fetchVehicles();
+    toast.success('Araç başarıyla güncellendi');
+    setIsModalOpen(false);
   };
 
   const filteredVehicles = vehicles.filter(vehicle =>
@@ -167,6 +177,7 @@ export default function Vehicles() {
           setSelectedVehicle(undefined);
         }}
         onSave={handleSave}
+        onUpdate={handleUpdate}
         vehicle={selectedVehicle}
       />
     </div>

@@ -18,10 +18,10 @@ export interface Vehicle {
 
 export interface Driver {
   id: number;
-  ad_soyad: string;
+  ad: string;
+  soyad: string;
   telefon: string;
   ehliyet_no: string;
-  ehliyet_sinifi: string;
   aktif: boolean;
   created_at: string;
 }
@@ -127,11 +127,22 @@ const apiService = {
   deleteVehicle: (id: number) => api.delete(`/api/vehicles/${id}/`),
 
   // Drivers
-  getDrivers: () => api.get('/api/drivers/'),
+  getDrivers: async (): Promise<Driver[]> => {
+    const response = await api.get('/api/drivers/');
+    return response.data;
+  },
   getDriver: (id: number) => api.get(`/api/drivers/${id}/`),
-  createDriver: (data: Partial<Driver>) => api.post('/api/drivers/', data),
-  updateDriver: (id: number, data: Partial<Driver>) => api.put(`/api/drivers/${id}/`, data),
-  deleteDriver: (id: number) => api.delete(`/api/drivers/${id}/`),
+  createDriver: async (data: Partial<Driver>): Promise<Driver> => {
+    const response = await api.post('/api/drivers/', data);
+    return response.data;
+  },
+  updateDriver: async (id: number, data: Partial<Driver>): Promise<Driver> => {
+    const response = await api.put(`/api/drivers/${id}/`, data);
+    return response.data;
+  },
+  deleteDriver: async (id: number): Promise<void> => {
+    await api.delete(`/api/drivers/${id}/`);
+  },
 
   // Tasks
   getTasks: () => api.get('/api/tasks/'),
