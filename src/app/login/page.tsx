@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import axios, { AxiosError } from 'axios';
 
 interface LoginResponse {
@@ -8,9 +9,8 @@ interface LoginResponse {
   refresh: string;
 }
 
-const API_URL = 'https://web-production-dd05.up.railway.app';
-
 export default function LoginPage() {
+  const router = useRouter();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +23,7 @@ export default function LoginPage() {
     setError(null);
     setSuccess(null);
 
-    const apiUrl = `${API_URL}/api/token/`;
+    const apiUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app'}/api/token/`;
     console.log('Login attempt with:', { apiUrl, username });
     
     try {
@@ -43,11 +43,13 @@ export default function LoginPage() {
       if (response.data.access && response.data.refresh) {
         localStorage.setItem('access_token', response.data.access);
         localStorage.setItem('refresh_token', response.data.refresh);
+        
         setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
         
         setTimeout(() => {
-          window.location.href = '/';
-        }, 2000);
+          router.push('/');
+          router.refresh();
+        }, 1000);
       } else {
         throw new Error('Token alınamadı');
       }

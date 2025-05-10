@@ -2,23 +2,34 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { FiHome, FiTruck, FiUsers, FiCalendar, FiBarChart2, FiDollarSign, FiMenu, FiX, FiLogOut } from 'react-icons/fi';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const pathname = usePathname();
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    setIsLoggedIn(!!token);
-  }, []);
+    const checkAuth = () => {
+      const token = localStorage.getItem('access_token');
+      setIsLoggedIn(!!token);
+      setIsLoading(false);
+
+      if (!token && pathname !== '/login') {
+        router.push('/login');
+      }
+    };
+
+    checkAuth();
+  }, [pathname, router]);
 
   const handleLogout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
-    window.location.href = '/login';
+    router.push('/login');
   };
 
   const menuItems = [
@@ -30,15 +41,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { path: '/harcamalar', label: 'Harcamalar', icon: FiDollarSign },
   ];
 
-  if (!isLoggedIn && pathname !== '/login') {
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
-    }
-    return null;
+  // Loading durumunda veya login sayfasındaysa direkt içeriği göster
+  if (isLoading || pathname === '/login') {
+    return <>{children}</>;
   }
 
-  if (pathname === '/login') {
-    return <>{children}</>;
+  // Giriş yapılmamışsa ve login sayfasında değilse null döndür
+  if (!isLoggedIn && pathname !== '/login') {
+    return null;
   }
 
   return (
