@@ -111,46 +111,46 @@ api.interceptors.response.use(
 const apiService = {
   // Auth
   login: (username: string, password: string) =>
-    api.post('/auth/token/', { username, password }),
+    api.post('/api/token/', { username, password }),
 
   // Dashboard
-  getDashboardStats: () => api.get('/dashboard/stats/'),
-  getRecentActivities: () => api.get('/dashboard/activities/'),
+  getDashboardStats: () => api.get('/api/dashboard/stats/'),
+  getRecentActivities: () => api.get('/api/dashboard/activities/'),
 
   // Vehicles
-  getVehicles: () => api.get('/vehicles/'),
-  getVehicle: (id: number) => api.get(`/vehicles/${id}/`),
-  createVehicle: (data: Partial<Vehicle>) => api.post('/vehicles/', data),
-  updateVehicle: (id: number, data: Partial<Vehicle>) => api.put(`/vehicles/${id}/`, data),
-  deleteVehicle: (id: number) => api.delete(`/vehicles/${id}/`),
+  getVehicles: () => api.get('/api/vehicles/'),
+  getVehicle: (id: number) => api.get(`/api/vehicles/${id}/`),
+  createVehicle: (data: Partial<Vehicle>) => api.post('/api/vehicles/', data),
+  updateVehicle: (id: number, data: Partial<Vehicle>) => api.put(`/api/vehicles/${id}/`, data),
+  deleteVehicle: (id: number) => api.delete(`/api/vehicles/${id}/`),
 
   // Drivers
-  getDrivers: () => api.get('/drivers/'),
-  getDriver: (id: number) => api.get(`/drivers/${id}/`),
-  createDriver: (data: Partial<Driver>) => api.post('/drivers/', data),
-  updateDriver: (id: number, data: Partial<Driver>) => api.put(`/drivers/${id}/`, data),
-  deleteDriver: (id: number) => api.delete(`/drivers/${id}/`),
+  getDrivers: () => api.get('/api/drivers/'),
+  getDriver: (id: number) => api.get(`/api/drivers/${id}/`),
+  createDriver: (data: Partial<Driver>) => api.post('/api/drivers/', data),
+  updateDriver: (id: number, data: Partial<Driver>) => api.put(`/api/drivers/${id}/`, data),
+  deleteDriver: (id: number) => api.delete(`/api/drivers/${id}/`),
 
   // Tasks
-  getTasks: () => api.get('/tasks/'),
-  getTask: (id: number) => api.get(`/tasks/${id}/`),
-  createTask: (data: Partial<Task>) => api.post('/tasks/', data),
-  updateTask: (id: number, data: Partial<Task>) => api.put(`/tasks/${id}/`, data),
-  deleteTask: (id: number) => api.delete(`/tasks/${id}/`),
+  getTasks: () => api.get('/api/tasks/'),
+  getTask: (id: number) => api.get(`/api/tasks/${id}/`),
+  createTask: (data: Partial<Task>) => api.post('/api/tasks/', data),
+  updateTask: (id: number, data: Partial<Task>) => api.put(`/api/tasks/${id}/`, data),
+  deleteTask: (id: number) => api.delete(`/api/tasks/${id}/`),
 
   // Mileages
-  getMileages: () => api.get('/mileages/'),
-  getMileage: (id: number) => api.get(`/mileages/${id}/`),
-  createMileage: (data: Partial<Mileage>) => api.post('/mileages/', data),
-  updateMileage: (id: number, data: Partial<Mileage>) => api.put(`/mileages/${id}/`, data),
-  deleteMileage: (id: number) => api.delete(`/mileages/${id}/`),
+  getMileages: () => api.get('/api/mileages/'),
+  getMileage: (id: number) => api.get(`/api/mileages/${id}/`),
+  createMileage: (data: Partial<Mileage>) => api.post('/api/mileages/', data),
+  updateMileage: (id: number, data: Partial<Mileage>) => api.put(`/api/mileages/${id}/`, data),
+  deleteMileage: (id: number) => api.delete(`/api/mileages/${id}/`),
 
   // Expenses
-  getExpenses: () => api.get('/expenses/'),
-  getExpense: (id: number) => api.get(`/expenses/${id}/`),
-  createExpense: (data: Partial<Expense>) => api.post('/expenses/', data),
-  updateExpense: (id: number, data: Partial<Expense>) => api.put(`/expenses/${id}/`, data),
-  deleteExpense: (id: number) => api.delete(`/expenses/${id}/`),
+  getExpenses: () => api.get('/api/expenses/'),
+  getExpense: (id: number) => api.get(`/api/expenses/${id}/`),
+  createExpense: (data: Partial<Expense>) => api.post('/api/expenses/', data),
+  updateExpense: (id: number, data: Partial<Expense>) => api.put(`/api/expenses/${id}/`, data),
+  deleteExpense: (id: number) => api.delete(`/api/expenses/${id}/`),
 };
 
 export default apiService; 
