@@ -46,11 +46,11 @@ export interface Mileage {
 
 export interface Expense {
   id: number;
-  kategori: string;
-  tutar: number;
+  arac: number;
   tarih: string;
-  aciklama: string;
-  arac_plaka: string;
+  tip: 'bakim' | 'kasko' | 'yakıt' | 'lastik' | 'tamir';
+  tutar: number;
+  aciklama?: string;
   created_at: string;
 }
 

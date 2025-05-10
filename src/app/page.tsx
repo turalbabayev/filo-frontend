@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import apiService from '@/services/api';
 import { AxiosError } from 'axios';
 import Layout from '@/components/Layout';
+import { Vehicle, Driver, Task, Mileage, Expense } from '@/services/api';
 
 interface DashboardStats {
   total_vehicles: number;
@@ -13,9 +14,9 @@ interface DashboardStats {
 }
 
 interface Activity {
-  type: string;
-  description: string;
-  date: string;
+  type: 'vehicle' | 'task' | 'mileage' | 'expense';
+  data: Vehicle | Task | Mileage | Expense;
+  created_at: string;
 }
 
 export default function Home() {
@@ -30,15 +31,10 @@ export default function Home() {
         setLoading(true);
         setError(null);
         
-        console.log('API çağrıları başlıyor...');
-        
         const [statsResponse, activitiesResponse] = await Promise.all([
           apiService.getDashboardStats(),
           apiService.getRecentActivities()
         ]);
-        
-        console.log('Stats yanıtı:', statsResponse.data);
-        console.log('Activities yanıtı:', activitiesResponse.data);
         
         setStats(statsResponse.data);
         setActivities(activitiesResponse.data);
@@ -46,11 +42,6 @@ export default function Home() {
         console.error('Dashboard veri yükleme hatası:', err);
         
         if (err instanceof AxiosError) {
-          console.error('Hata detayları:', {
-            message: err.message,
-            response: err.response?.data,
-            status: err.response?.status
-          });
           setError(`Veriler yüklenirken bir hata oluştu: ${err.response?.data?.detail || err.message}`);
         } else {
           setError('Beklenmeyen bir hata oluştu');
@@ -62,6 +53,55 @@ export default function Home() {
 
     fetchDashboardData();
   }, []);
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'vehicle':
+        return '🚗';
+      case 'task':
+        return '📋';
+      case 'mileage':
+        return '📍';
+      case 'expense':
+        return '💰';
+      default:
+        return '📝';
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'vehicle':
+        return 'bg-blue-100 text-blue-600';
+      case 'task':
+        return 'bg-purple-100 text-purple-600';
+      case 'mileage':
+        return 'bg-green-100 text-green-600';
+      case 'expense':
+        return 'bg-orange-100 text-orange-600';
+      default:
+        return 'bg-gray-100 text-gray-600';
+    }
+  };
+
+  const getActivityDescription = (activity: Activity) => {
+    switch (activity.type) {
+      case 'vehicle':
+        const vehicle = activity.data as Vehicle;
+        return `${vehicle.marka} ${vehicle.model} (${vehicle.plaka}) araç sisteme eklendi`;
+      case 'task':
+        const task = activity.data as Task;
+        return `Yeni görev oluşturuldu: ${task.aciklama}`;
+      case 'mileage':
+        const mileage = activity.data as Mileage;
+        return `Kilometre kaydı eklendi: ${mileage.kilometre} km`;
+      case 'expense':
+        const expense = activity.data as Expense;
+        return `${expense.tip} harcaması eklendi: ${expense.tutar} TL`;
+      default:
+        return 'Yeni aktivite';
+    }
+  };
 
   const content = (
     <div className="space-y-8">
@@ -123,17 +163,13 @@ export default function Home() {
                 key={index} 
                 className="flex items-start space-x-4 p-4 bg-gray-50 rounded-xl transition-all duration-200 hover:bg-gray-100"
               >
-                <div className={`p-3 rounded-xl ${
-                  activity.type === 'task' 
-                    ? 'bg-blue-100 text-blue-600' 
-                    : 'bg-green-100 text-green-600'
-                }`}>
-                  <span className="text-2xl">{activity.type === 'task' ? '🚗' : '💰'}</span>
+                <div className={`p-3 rounded-xl ${getActivityColor(activity.type)}`}>
+                  <span className="text-2xl">{getActivityIcon(activity.type)}</span>
                 </div>
                 <div className="flex-1">
-                  <p className="text-gray-800 font-medium">{activity.description}</p>
+                  <p className="text-gray-800 font-medium">{getActivityDescription(activity)}</p>
                   <p className="text-sm text-gray-500 mt-1">
-                    {new Date(activity.date).toLocaleString('tr-TR', {
+                    {new Date(activity.created_at).toLocaleString('tr-TR', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric',
