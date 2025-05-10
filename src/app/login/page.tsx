@@ -13,11 +13,16 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
     const apiUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/token/`;
-    console.log('Trying to login with URL:', apiUrl);
+    console.log('Login attempt with:', { apiUrl, username });
     
     try {
       const response = await axios.post<LoginResponse>(
@@ -26,33 +31,42 @@ export default function LoginPage() {
         {
           headers: {
             'Content-Type': 'application/json',
+            'Accept': 'application/json'
           }
         }
       );
 
-      console.log('Login successful:', response.data);
-      localStorage.setItem('access_token', response.data.access);
-      localStorage.setItem('refresh_token', response.data.refresh);
-      setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
-      setError(null);
+      console.log('Login response:', response.data);
       
-      setTimeout(() => {
-        window.location.href = '/';
-      }, 2000);
+      if (response.data.access && response.data.refresh) {
+        localStorage.setItem('access_token', response.data.access);
+        localStorage.setItem('refresh_token', response.data.refresh);
+        setSuccess('Giriş başarılı! Yönlendiriliyorsunuz...');
+        
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      } else {
+        throw new Error('Token alınamadı');
+      }
 
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error details:', {
+        error,
+        response: error instanceof AxiosError ? error.response?.data : null,
+        status: error instanceof AxiosError ? error.response?.status : null
+      });
+
       if (error instanceof AxiosError) {
         const errorMessage = error.response?.data?.detail || 
                            error.response?.data?.message || 
                            'Kullanıcı adı veya şifre hatalı!';
         setError(`Giriş başarısız: ${errorMessage}`);
-        console.log('Error response data:', error.response?.data);
-        console.log('Error response status:', error.response?.status);
       } else {
         setError('Bir hata oluştu. Lütfen tekrar deneyin.');
       }
-      setSuccess(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -79,6 +93,7 @@ export default function LoginPage() {
               onChange={(e) => setUsername(e.target.value)}
               className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
+              disabled={isLoading}
             />
           </div>
           <div>
@@ -89,13 +104,17 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-400"
               required
+              disabled={isLoading}
             />
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition duration-200"
+            className={`w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition duration-200 ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+            disabled={isLoading}
           >
-            Giriş Yap
+            {isLoading ? 'Giriş Yapılıyor...' : 'Giriş Yap'}
           </button>
         </form>
       </div>
