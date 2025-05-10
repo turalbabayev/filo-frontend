@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios, { AxiosError } from 'axios';
+import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app';
 
@@ -24,28 +25,36 @@ export default function Login() {
     setLoading(true);
 
     try {
+      console.log('Login isteği gönderiliyor:', API_URL);
       const response = await axios.post<LoginResponse>(`${API_URL}/api/token/`, {
         username,
         password,
       });
 
+      console.log('Login yanıtı:', response.data);
       const { access, refresh } = response.data;
       
       // Token'ları localStorage'a kaydet
       localStorage.setItem('access_token', access);
       localStorage.setItem('refresh_token', refresh);
 
-      // Token'ları cookie'lere de kaydet
-      document.cookie = `access_token=${access}; path=/`;
-      document.cookie = `refresh_token=${refresh}; path=/`;
+      // Token'ları cookie'lere kaydet (7 gün geçerli)
+      Cookies.set('access_token', access, { expires: 7, path: '/' });
+      Cookies.set('refresh_token', refresh, { expires: 7, path: '/' });
 
+      console.log('Token\'lar kaydedildi, ana sayfaya yönlendiriliyor...');
       router.push('/');
+      router.refresh(); // Sayfayı yenile
     } catch (err) {
-      if (err instanceof AxiosError && err.response?.status === 401) {
-        setError('Kullanıcı adı veya şifre hatalı');
+      console.error('Login hatası:', err);
+      if (err instanceof AxiosError) {
+        if (err.response?.status === 401) {
+          setError('Kullanıcı adı veya şifre hatalı');
+        } else {
+          setError(`Giriş yapılırken bir hata oluştu: ${err.response?.data?.detail || err.message}`);
+        }
       } else {
-        setError('Giriş yapılırken bir hata oluştu');
-        console.error('Login error:', err);
+        setError('Beklenmeyen bir hata oluştu');
       }
     } finally {
       setLoading(false);

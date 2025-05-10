@@ -5,7 +5,7 @@ import Layout from './components/Layout';
 import { FiTruck, FiUsers, FiCalendar, FiDollarSign } from 'react-icons/fi';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { apiService } from '@/services/api';
+import apiService from '@/services/api';
 
 interface DashboardStats {
   total_vehicles: number;
@@ -15,7 +15,7 @@ interface DashboardStats {
 }
 
 interface Activity {
-  type: 'task' | 'expense';
+  type: string;
   description: string;
   date: string;
 }
@@ -30,16 +30,28 @@ export default function Home() {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
+        setError(null);
+        
+        console.log('API çağrıları başlıyor...');
+        
         const [statsResponse, activitiesResponse] = await Promise.all([
           apiService.getDashboardStats(),
           apiService.getRecentActivities()
         ]);
         
+        console.log('Stats yanıtı:', statsResponse.data);
+        console.log('Activities yanıtı:', activitiesResponse.data);
+        
         setStats(statsResponse.data);
         setActivities(activitiesResponse.data);
-      } catch (err) {
-        setError('Veriler yüklenirken bir hata oluştu.');
-        console.error('Dashboard veri hatası:', err);
+      } catch (err: any) {
+        console.error('Dashboard veri yükleme hatası:', err);
+        console.error('Hata detayları:', {
+          message: err.message,
+          response: err.response?.data,
+          status: err.response?.status
+        });
+        setError('Veriler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
       } finally {
         setLoading(false);
       }
@@ -75,16 +87,19 @@ export default function Home() {
     },
   ];
 
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen">
+      <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+    </div>;
+  }
+
   if (error) {
-    return (
-      <Layout>
-        <div className="py-6">
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        </div>
-      </Layout>
-    );
+    return <div className="flex justify-center items-center min-h-screen">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative" role="alert">
+        <strong className="font-bold">Hata!</strong>
+        <span className="block sm:inline"> {error}</span>
+      </div>
+    </div>;
   }
 
   return (
