@@ -17,7 +17,9 @@ export default function VehicleModal({ isOpen, onClose, onSave, vehicle }: Vehic
     model: '',
     yil: new Date().getFullYear(),
     tip: '',
-    mevcut_durum: 'havuzda'
+    kaynak_tipi: 'ozmal',
+    mevcut_durum: 'havuzda',
+    aciklama: ''
   });
 
   useEffect(() => {
@@ -97,6 +99,19 @@ export default function VehicleModal({ isOpen, onClose, onSave, vehicle }: Vehic
           </div>
 
           <div>
+            <label className="block text-sm font-medium text-gray-700">Kaynak Tipi</label>
+            <select
+              value={formData.kaynak_tipi}
+              onChange={(e) => setFormData({ ...formData, kaynak_tipi: e.target.value })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+              required
+            >
+              <option value="ozmal">Özmal</option>
+              <option value="kiralik">Kiralık</option>
+            </select>
+          </div>
+
+          <div>
             <label className="block text-sm font-medium text-gray-700">Durum</label>
             <select
               value={formData.mevcut_durum}
@@ -107,6 +122,16 @@ export default function VehicleModal({ isOpen, onClose, onSave, vehicle }: Vehic
               <option value="havuzda">Havuzda</option>
               <option value="kullanımda">Kullanımda</option>
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Açıklama</label>
+            <textarea
+              value={formData.aciklama}
+              onChange={(e) => setFormData({ ...formData, aciklama: e.target.value })}
+              className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2"
+              rows={3}
+            />
           </div>
 
           <div className="flex justify-end space-x-3 mt-6">

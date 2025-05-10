@@ -10,7 +10,9 @@ export interface Vehicle {
   model: string;
   yil: number;
   tip: string;
+  kaynak_tipi: 'ozmal' | 'kiralik';
   mevcut_durum: 'havuzda' | 'kullanımda';
+  aciklama?: string;
   created_at: string;
 }
 
