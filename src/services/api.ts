@@ -3,18 +3,20 @@ import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://web-production-dd05.up.railway.app';
 
 // Interfaces
-interface Vehicle {
+export interface Vehicle {
   id: number;
   plaka: string;
   marka: string;
   model: string;
   yil: number;
+  tip: string;
+  kaynak_tipi: string;
   mevcut_durum: string;
   aciklama?: string;
   created_at: string;
 }
 
-interface Driver {
+export interface Driver {
   id: number;
   ad: string;
   soyad: string;
@@ -24,7 +26,7 @@ interface Driver {
   created_at: string;
 }
 
-interface Task {
+export interface Task {
   id: number;
   arac: number;
   surucu: number;
@@ -34,7 +36,7 @@ interface Task {
   created_at: string;
 }
 
-interface Mileage {
+export interface Mileage {
   id: number;
   arac: number;
   tarih: string;
@@ -42,12 +44,12 @@ interface Mileage {
   created_at: string;
 }
 
-interface Expense {
+export interface Expense {
   id: number;
   arac: number;
   tarih: string;
-  tur: string;
-  miktar: number;
+  tip: string;
+  tutar: number;
   aciklama: string;
   created_at: string;
 }
