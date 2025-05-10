@@ -3,6 +3,7 @@ import { Task, Vehicle, Driver } from '@/services/api';
 import Modal from '@/components/ui/Modal';
 import apiService from '@/services/api';
 import { AxiosError } from 'axios';
+import { toast } from 'react-hot-toast';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -72,11 +73,17 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
     const selectedVehicle = vehicles.find(v => v.id === formData.arac);
     const selectedDriver = drivers.find(d => d.id === formData.surucu);
 
-    // Tarihleri ISO formatına çeviriyoruz
+    // Tarihleri kontrol edip doğru formata çeviriyoruz
+    if (!formData.baslangic_tarihi || !formData.bitis_tarihi) {
+      toast.error('Başlangıç ve bitiş tarihleri gereklidir');
+      return;
+    }
+
     const submissionData = {
       ...formData,
-      baslangic_tarihi: new Date(formData.baslangic_tarihi + 'T00:00:00').toISOString(),
-      bitis_tarihi: new Date(formData.bitis_tarihi + 'T00:00:00').toISOString(),
+      // Tarihleri YYYY-MM-DD formatında gönderiyoruz
+      baslangic_tarihi: formData.baslangic_tarihi,
+      bitis_tarihi: formData.bitis_tarihi,
       durum: formData.durum || 'beklemede',
       // Araç ve sürücü bilgilerini ekle
       arac_plaka: selectedVehicle?.plaka,
@@ -90,9 +97,20 @@ export default function TaskModal({ isOpen, onClose, onSave, task }: TaskModalPr
       onClose();
     } catch (error) {
       if (error instanceof AxiosError) {
-        console.error('Form gönderim hatası:', error.response?.data || error.message);
+        const errorData = error.response?.data;
+        if (typeof errorData === 'object' && errorData !== null) {
+          // Hata mesajlarını birleştirip göster
+          const errorMessages = Object.entries(errorData)
+            .map(([field, messages]) => `${field}: ${messages}`)
+            .join('\n');
+          toast.error(errorMessages);
+        } else {
+          toast.error('Görev kaydedilirken bir hata oluştu');
+        }
+        console.error('Form gönderim hatası:', errorData);
       } else {
         console.error('Beklenmeyen hata:', error);
+        toast.error('Beklenmeyen bir hata oluştu');
       }
       throw error;
     }
